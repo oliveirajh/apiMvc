@@ -8,12 +8,9 @@ const setUser = require("./middlewares/setUser");
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-// Variáveis
-const PORT = 3000;
-
 // Sessions
 app.use(session({
-    secret: 'estoque',
+    secret: 'projeto1',
     cookie: {
         maxAge: 1200000,
     },
@@ -37,8 +34,10 @@ connection.authenticate().then(() => {
 
 // Rotas
 const checkLogin = require("./middlewares/checkLogin");
+const userWallet = require("./routes/walletRoutes");
 const userRoutes = require("./routes/userRoutes");
 
+app.use('/wallet', userWallet);
 app.use('/user', userRoutes);
 
 app.get('/', checkLogin, (req, res, next) => {
