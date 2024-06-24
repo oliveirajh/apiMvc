@@ -1,0 +1,22 @@
+<%- include("../partials/header") %>
+
+<body>
+    <h1>Página de login do usuário</h1>
+
+    <form method="post" action="/user/login">
+        <input type="email" required placeholder="Digite seu email" name="email" id="email">
+        <input type="password" required placeholder="Digite sua senha" name="password" id="password">
+        <button type="submit">Login</button>
+    </form>
+    <% if (msg) { %>
+        <p style="color: red">
+            <%= msg %>
+        </p>
+    <% }; %>
+
+    <p>Não tem uma conta? <a href="/user/register">Cadastrar-se.</a></p>
+
+
+</body>
+
+<%- include("../partials/footer") %>

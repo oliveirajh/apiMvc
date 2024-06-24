@@ -1,0 +1,14 @@
+<%- include("../partials/header"); %>
+
+<body>
+    <h1>Cadastrar-se</h1>
+    <form method="post" action="/user/register">
+        <input type="email" required placeholder="Digite seu email" name="email" id="email">
+        <input type="text" required placeholder="Digite o nome de usuário" name="username" id="username">
+        <input type="password" required placeholder="Digite sua senha" name="senha" id="senha">
+        <button type="submit">Cadastrar-se</button>
+    </form>
+    <p>Já tem uma conta? Faça <a href="/">login.</a></p>
+</body>
+
+<%- include("../partials/footer");  %>
