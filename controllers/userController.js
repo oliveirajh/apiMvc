@@ -101,8 +101,14 @@ exports.deleteUser = (req, res, next) => {
             email: usuario.usuario
         }
     }).then(() => {
-        req.session.destroy();
+        Extrato.destroy({
+            where:{
+                usuarioId: null
+            }
+        }).then(() => {
+            req.session.destroy();
         res.render('user/login', {msg: "Conta deletada com sucesso!"});
+        });
     }).catch (err =>{
         console.error(`Erro ao deletar usuário: ${err}`)
     });

@@ -1,18 +1,28 @@
-<% include('../partials/header') %>
+<%- include('../partials/header') %>
 <body>
-    <h1>Extrato</h1>
+    <h1 class="text-center text-2xl font-bold py-4 text-indigo-400">Extrato</h1>
 
-    <a href="/">Voltar</a>
+    <div class="container w-80 lg:w-96 mx-auto bg-[#f8f8f8] p-4 py-6">
 
-    <% extratos.reverse().forEach(extrato => { %>
-        <hr>
-        <p>ID da transação: <%= extrato.id_transacao %></p>
-        <p>Descrição: <%= extrato.descricao %></p>
-        <p>Valor: R$<%= extrato.valor %></p>
-        <p>Saldo após transação: <%= extrato.saldo_apos_transacao %></p>
-        <p>Conta destino: <%= extrato.conta_destino %></p>
-        <p>Data: <%= extrato.data_transacao %></p>
-    <% }); %>
+        <form action="/" method="get">
+            <button class="bg-indigo-400 py-2 px-3 text-white rounded-xl hover:bg-indigo-500 mb-4 mt-2" type="submit">Voltar</button>
+        </form>
+
+        <% if (extratos.length === 0) { %>
+            <p class="py-2" style="color: red;">Ainda não há extratos.</p>
+        <% } else { %>
+            <% extratos.reverse().forEach(extrato => { %>
+                <div class="border-b-2 border-dashed border-[#a5a5a5] bg-transparent mb-2"></div>
+                <p class="font-bold">ID da transação: <%= extrato.id_transacao %></p>
+                <p class="font-bold">Descrição: <span class="font-normal"><%= extrato.descricao %></span></p>
+                <p class="font-medium">Valor: <span class="text-emerald-400">R$<%= extrato.valor %></span></p>
+                <p class="font-medium ">Saldo após transação: <span class="text-indigo-400"><%= extrato.saldo_apos_transacao %></span></p>
+                <p class="font-medium">Conta destino: <span class="text-sky-400"><%= extrato.conta_destino %></span></p>
+                <p class="font-medium pb-2">Data: <%= extrato.data_transacao %></p>
+            <% }); %>
+        <% }; %>
+
+    </div>
 
 </body>
 <% include('../partials/footer') %>

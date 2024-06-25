@@ -1,6 +1,6 @@
 <%- include("./partials/header") %>
 <body>
-    <div class="container w-[350px] mx-auto">
+    <div class="container w-[350px] lg:w-[900px] mx-auto">
         <form class="inline" action="/user/logout" method="get">
             <button class="my-2 bg-indigo-400 py-2 px-3 text-white rounded-xl hover:bg-indigo-500" type="submit">Sair</button>
         </form>
@@ -19,7 +19,7 @@
 
         <p class="font-medium text-2xl py-2">Bem-vindo de volta, <span class="text-indigo-400 font-bold"><%= locals.usuario.username %></span>!</p>
         <p class="font-medium text-lg py-2">Sua chave de transação: <span class="font-bold"><%= locals.usuario.chave %></span></p>
-        <p class="text-lg py-2">Saldo atual: <span class="font-bold bg-slate-100 p-2 rounded-md">R$<%= locals.usuario.saldo %></span></p>
+        <p class="text-lg py-2">Saldo atual: <span class="font-bold bg-slate-100 p-2 rounded-md text-green-600">R$<%= locals.usuario.saldo %></span></p>
     </div>
 </body>
 <%- include("./partials/footer") %>
