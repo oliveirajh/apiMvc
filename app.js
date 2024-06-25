@@ -8,6 +8,7 @@ const setUser = require("./middlewares/setUser");
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+
 // Sessions
 app.use(session({
     secret: 'projeto1',
@@ -34,11 +35,10 @@ connection.authenticate().then(() => {
 
 // Rotas
 const checkLogin = require("./middlewares/checkLogin");
-const userWallet = require("./routes/walletRoutes");
 const userRoutes = require("./routes/userRoutes");
+const extratoRoutes = require("./routes/extratoRoutes");
 
-app.use('/wallet', userWallet);
-app.use('/user', userRoutes);
+app.use('/user', userRoutes, extratoRoutes);
 
 app.get('/', checkLogin, (req, res, next) => {
     res.render('index');

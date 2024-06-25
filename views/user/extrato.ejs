@@ -1,0 +1,18 @@
+<% include('../partials/header') %>
+<body>
+    <h1>Extrato</h1>
+
+    <a href="/">Voltar</a>
+
+    <% extratos.reverse().forEach(extrato => { %>
+        <hr>
+        <p>ID da transação: <%= extrato.id_transacao %></p>
+        <p>Descrição: <%= extrato.descricao %></p>
+        <p>Valor: R$<%= extrato.valor %></p>
+        <p>Saldo após transação: <%= extrato.saldo_apos_transacao %></p>
+        <p>Conta destino: <%= extrato.conta_destino %></p>
+        <p>Data: <%= extrato.data_transacao %></p>
+    <% }); %>
+
+</body>
+<% include('../partials/footer') %>

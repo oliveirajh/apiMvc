@@ -1,11 +1,25 @@
 <%- include("./partials/header") %>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de finanças</title>
-</head>
 <body>
-    <h1>Controle de finanças</h1>
-    <p>Bem-vindo de volta, <%= locals.usuario.username %>!</p>
+    <div class="container w-[350px] mx-auto">
+        <form class="inline" action="/user/logout" method="get">
+            <button class="my-2 bg-indigo-400 py-2 px-3 text-white rounded-xl hover:bg-indigo-500" type="submit">Sair</button>
+        </form>
+
+        <form class="inline" action="/user/deleteUser" method="get">
+            <button class="my-2 bg-indigo-400 py-2 px-3 text-white rounded-xl hover:bg-indigo-500" type="submit">Deletar conta</button>
+        </form>
+
+        <form class="inline" action="/user/extratos" method="get">
+            <button class="my-2 bg-indigo-400 py-2 px-3 text-white rounded-xl hover:bg-indigo-500" type="submit" type="submit">Extratos</button>
+        </form>
+
+        <form class="inline" action="/user/transfer" method="get">
+            <button class="my-2 bg-indigo-400 py-2 px-3 text-white rounded-xl hover:bg-indigo-500" type="submit" type="submit">Realizar transferencia</button>
+        </form>
+
+        <p class="font-medium text-2xl py-2">Bem-vindo de volta, <span class="text-indigo-400 font-bold"><%= locals.usuario.username %></span>!</p>
+        <p class="font-medium text-lg py-2">Sua chave de transação: <span class="font-bold"><%= locals.usuario.chave %></span></p>
+        <p class="text-lg py-2">Saldo atual: <span class="font-bold bg-slate-100 p-2 rounded-md">R$<%= locals.usuario.saldo %></span></p>
+    </div>
 </body>
 <%- include("./partials/footer") %>

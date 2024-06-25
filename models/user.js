@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
 const connection = require('../database/database');
-const Wallet = require('./wallet');
+
 
 const Usuario = connection.define(
     'usuario', {
@@ -22,12 +22,20 @@ const Usuario = connection.define(
     senha: {
         type: Sequelize.STRING,
         allowNull: false
+    },
+    saldo: {
+        type: Sequelize.DOUBLE,
+        allowNull: false
+    },
+    chave: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true
     }
 }, {
     timestamps: false
 });
 
-Usuario.hasOne(Wallet);
 
 //Usuario.sync({ force: true });
 
