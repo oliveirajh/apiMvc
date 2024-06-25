@@ -124,7 +124,7 @@ exports.transfer = async (req, res, next) => {
     try {
         const usuario = req.session.login;
         const { email, saldo: saldoRemetente } = usuario;
-        const { chave, valor } = req.body;
+        const { chave, valor, descricao } = req.body;
         const valorTransferencia = parseFloat(valor);
         const novoSaldo = saldoRemetente - valorTransferencia;
 
@@ -160,10 +160,10 @@ exports.transfer = async (req, res, next) => {
         await remetente.update({ saldo: novoSaldo }, { transaction: t });
         await Extrato.create({
             data_transacao: new Date(),
-            tipo_transacao: 'Transação',
+            tipo_transacao: 'Pagamento',
             valor: valor,
             saldo_apos_transacao: novoSaldo,
-            descricao: "Transferência para " + destinatario.username,
+            descricao: descricao || "Transferência para " + destinatario.username,
             categoria: "Transação",
             conta_destino: destinatario.email,
             usuarioId: remetente.id
@@ -172,10 +172,10 @@ exports.transfer = async (req, res, next) => {
         await destinatario.update({ saldo: destinatario.saldo + valorTransferencia }, { transaction: t });
         await Extrato.create({
             data_transacao: new Date(),
-            tipo_transacao: 'Depósito',
+            tipo_transacao: 'Recebimento',
             valor: valor,
-            saldo_apos_transacao: destinatario.saldo + valorTransferencia,
-            descricao: "Transferência de " + remetente.username,
+            saldo_apos_transacao: destinatario.saldo,
+            descricao: descricao || "Transferência de " + remetente.username,
             categoria: "Transação",
             conta_destino: destinatario.email,
             usuarioId: destinatario.id
