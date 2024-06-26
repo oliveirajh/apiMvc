@@ -10,7 +10,7 @@
   "keywords": [
     "finanças"
   ],
-  "author": "",
+  "author": "Gustavo Gutierrez",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",

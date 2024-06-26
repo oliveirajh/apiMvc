@@ -1,20 +1,22 @@
 <%- include("../partials/header") %>
 
 <body>
-    <h1 class="text-center text-2xl font-bold py-4 text-indigo-400">Login</h1>
+    <div class="relative top-[-50%] translate-y-[50%]">
+        <h1 class="text-center text-2xl font-bold py-4 text-indigo-400">Login</h1>
 
-    <div class="container w-80 mx-auto bg-[#f8f8f8] p-4 py-6 pb-0">
-        <form method="post" action="/user/login">
-            <input class="my-2 w-full px-2 border-b border-indigo-500 bg-transparent outline-0" type="email" required placeholder="Digite seu email" name="email" id="email">
-            <input class="my-2 w-full px-2 border-b border-indigo-500 bg-transparent outline-0 block" type="password" required placeholder="Digite sua senha" name="password" id="password">
-            <button class="my-2 bg-indigo-400 py-2 px-3 text-white rounded-xl hover:bg-indigo-500" type="submit">Login</button>
-        </form>
-        <p>Não tem uma conta? <a href="/user/register"><span class="text-indigo-400">Cadastrar-se</span></a></p>
-        <% if (msg) { %>
-            <p class="text-center py-2" style="color: red">
-                <%= msg %>
-            </p>
-        <% }; %>
+        <div class="container w-80 mx-auto bg-[#f8f8f8] p-4 py-6 pb-0">
+            <form method="post" action="/user/login">
+                <input class="my-2 w-full px-2 border-b border-indigo-500 bg-transparent outline-0" type="email" required placeholder="Digite seu email" name="email" id="email">
+                <input class="my-2 w-full px-2 border-b border-indigo-500 bg-transparent outline-0 block" type="password" required placeholder="Digite sua senha" name="password" id="password">
+                <button class="my-2 bg-indigo-400 py-2 px-3 text-white rounded-xl hover:bg-indigo-500" type="submit">Login</button>
+            </form>
+            <p>Não tem uma conta? <a href="/user/register"><span class="text-indigo-400">Cadastrar-se</span></a></p>
+            <% if (msg) { %>
+                <p class="text-center py-2" style="color: red">
+                    <%= msg %>
+                </p>
+            <% }; %>
+        </div>
     </div>
 </body>
 

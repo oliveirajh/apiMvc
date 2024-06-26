@@ -1,7 +1,7 @@
 <%- include("./partials/header") %>
 <body>
-    <div class="container w-[350px] lg:w-[900px] mx-auto">
-        <div class="flex lg:justify-between gap-2 flex-wrap mt-1 mb-20">
+    <div class="container relative top-[-10%] translate-y-[10%] w-[350px] lg:w-[900px] mx-auto">
+        <div class="flex lg:justify-between gap-2 flex-wrap mt-1">
             <form class="inline" action="/user/logout" method="get">
                 <button class="my-2 bg-indigo-400 py-2 px-3 text-white rounded-xl hover:bg-indigo-500" type="submit">Sair</button>
             </form>
@@ -31,6 +31,8 @@
             </form>
         </div>
 
+        <hr class="border-[#9b9b9b] mt-2">
+
         <p class="font-medium text-2xl py-2">Bem-vindo de volta, <span class="text-indigo-400 font-bold"><%= locals.usuario.username %></span>!</p>
         <% if (msg) { %>
             <p class="text-lg font-semibold text-red-600"><%= msg %></p>
@@ -42,7 +44,7 @@
 
         <% if (cofrinhos) { %>
             <% cofrinhos.reverse().forEach(cofrinho => {%>
-                <div class="container bg-[#f8f8f8] w-[300px] lg:w-[400px] mx-auto mt-10 p-3 rounded-md">
+                <div class="container bg-[#f8f8f8] w-[300px] lg:w-[400px] mx-auto mt-10 mb-10 p-3 rounded-md">
                     <p class="text-lg font-bold text-indigo-400">Cofrinho</p>
                     <p class="font-semibold"><%= cofrinho.nome %></p>
                     <div class="flex justify-between">
