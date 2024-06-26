@@ -290,8 +290,21 @@ exports.deposit = async (req, res, next) => {
         await usuarioAtual.update({ saldo: usuarioAtual.saldo + valorDeposito });
 
         req.session.login.saldo = usuarioAtual.saldo;
-
         const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
+
+        await connection.transaction(async (t) => {
+            await Extrato.create({
+                data_transacao: new Date(),
+                tipo_transacao: 'Recebimento',
+                valor: valorDeposito,
+                saldo_apos_transacao: usuario.saldo,
+                descricao: 'Depósito bancário',
+                categoria: 'Cofrinho',
+                conta_destino: usuario.email,
+                usuarioId: usuario.id
+            }, { transaction: t });
+        });
+
         res.render('index', { msg: 'Valor depositado com sucesso!', cofrinhos: cofrinhos });
 
     } catch (err) {
