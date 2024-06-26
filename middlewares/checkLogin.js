@@ -13,6 +13,7 @@ function checkLogin(req, res, next) {
                     id: usuario.id,
                     usuario: usuario.email,
                     username: usuario.username,
+                    senha: usuario.senha,
                     saldo: usuario.saldo,
                     chave: usuario.chave,
                     email: usuario.email

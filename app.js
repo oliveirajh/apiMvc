@@ -33,15 +33,19 @@ connection.authenticate().then(() => {
     console.log(erro);
 });
 
-// Rotas
+// Middlewares
+const cofrinhos = require("./middlewares/cofrinhos");
 const checkLogin = require("./middlewares/checkLogin");
+
+// Rotas
 const userRoutes = require("./routes/userRoutes");
 const extratoRoutes = require("./routes/extratoRoutes");
+const cofrinhoRoutes = require("./routes/cofrinhoRoutes");
 
-app.use('/user', userRoutes, extratoRoutes);
+app.use('/user', userRoutes, extratoRoutes, cofrinhoRoutes);
 
-app.get('/', checkLogin, (req, res, next) => {
-    res.render('index');
+app.get('/', checkLogin, cofrinhos, (req, res, next) => {
+    res.render('index', {msg: ""});
 });
 
 module.exports = app;

@@ -6,16 +6,13 @@
         <form action="/user/transfer" method="post">
             
             <input class="my-2 w-full px-2 border-b border-indigo-500 bg-transparent outline-0" type="text" required placeholder="Digite a chave da conta destino" name="chave" id="chave">
-            <input class="my-2 w-full px-2 border-b border-indigo-500 bg-transparent outline-0 block" type="number" required placeholder="Digite o valor da transação" name="valor" id="valor">
+            <input class="my-2 w-full px-2 border-b border-indigo-500 bg-transparent outline-0 block" type="number" required placeholder="Digite o valor da transação" name="valor" id="valor" step="0.01">
             <textarea class="w-full box-border overflow-hidden p-2 focus:border-0 focus:outline-none resize-none text-sm" name="descricao" id="descricao" placeholder="Descrição" oninput="autoResize(this)"></textarea>
             <% if (msg) { %>
                 <p class="" style="color: red"><%= msg %></p>
             <% }; %>
             <button class="my-2 bg-indigo-400 py-2 px-3 text-white rounded-xl hover:bg-indigo-500" type="submit">Transferir</button>
-        </form>
-
-        <form class="inline" action="/" method="get">
-            <button class="bg-indigo-400 py-2 px-3 text-white rounded-xl hover:bg-indigo-500 mb-4 mt-2" type="submit">voltar</button>
+            <a class="my-2 bg-indigo-400 py-[10px] px-3 text-white rounded-xl hover:bg-indigo-500" href="/">Voltar</a>
         </form>
     </div>
 

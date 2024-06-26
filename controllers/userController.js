@@ -1,6 +1,7 @@
 const express = require('express');
 const Usuario = require('../models/user');
 const Extrato = require('../models/extrato');
+const Cofrinho = require('../models/cofrinho');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const checkLogin = require('../middlewares/checkLogin');
@@ -91,6 +92,9 @@ exports.register = (req, res, next) => {
     });
 }
 
+exports.deleteUserRender = (req, res, next) => {
+    res.render("user/delete", {msg: ""});
+}
 
 exports.deleteUser = (req, res, next) => {
     const usuario = req.session.login;
@@ -188,5 +192,111 @@ exports.transfer = async (req, res, next) => {
     } catch (err) {
         await t.rollback();
         return res.render('user/transfer', { msg: `Erro: ${err.message}` });
+    }
+};
+
+exports.edit = async (req, res, next) => {
+    const username = req.body.username;
+    const email = req.body.email;
+    const oldPassword = req.body.password0;
+    const password = req.body.password1;
+    const passwordCheck = req.body.password2;
+
+    try {
+        if (username) {
+            const usuarioEncontrado = await Usuario.findOne({ where: { username: username } });
+            if (usuarioEncontrado) {
+                return res.render('user/edit', { msg: "Nome de usuário já existe, por favor, tente outro." });
+            } else {
+                const usuario = req.session.login;
+                const usuarioAtual = await Usuario.findOne({ where: { id: usuario.id } });
+                if (usuarioAtual) {
+                    await usuarioAtual.update({ username: username });
+                    req.session.login.username = username;
+                }
+            }
+        }
+
+        if (email) {
+            const usuarioEncontrado = await Usuario.findOne({ where: { email: email } });
+            if (usuarioEncontrado) {
+                return res.render('user/edit', { msg: "Email já cadastrado, por favor, tente outro." });
+            } else {
+                const usuario = req.session.login;
+                const usuarioAtual = await Usuario.findOne({ where: { id: usuario.id } });
+                if (usuarioAtual) {
+                    await usuarioAtual.update({ email: email });
+                    req.session.login.email = email;
+                }
+            }
+        }
+
+        if (password) {
+            if (password == passwordCheck) {
+                const usuario = req.session.login;
+                const usuarioAtual = await Usuario.findOne({ where: { id: usuario.id } });
+                if (usuarioAtual) {
+                    const senhaCorreta = bcrypt.compareSync(oldPassword, usuarioAtual.senha);
+                    if (senhaCorreta) {
+                        const salt = bcrypt.genSaltSync();
+                        const senhaCriptografada = bcrypt.hashSync(password, salt);
+                        await usuarioAtual.update({ senha: senhaCriptografada });
+                        req.session.login.senha = senhaCriptografada;
+                    } else {
+                        return res.render('user/edit', { msg: "Senha antiga incorreta." });
+                    }
+                }
+            } else {
+                return res.render('user/edit', { msg: "Senhas não coincidem." });
+            }
+        }
+
+        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: req.session.login.id } });
+        return res.render("index", { msg: "Dados salvos com sucesso!", cofrinhos: cofrinhos });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.editRender = (req, res, next) => {
+    res.render('user/edit', {
+        usuario: req.session.login,
+        msg: ""
+    });
+}
+
+
+exports.depositRender = async(req, res, next) => {
+    res.render("user/deposit", {msg: ""});
+}
+
+exports.deposit = async (req, res, next) => {
+    const usuario = req.session.login;
+    const valorDeposito = parseFloat(req.body.valor);
+
+    if (isNaN(valorDeposito) || valorDeposito <= 0) {
+        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
+        return res.render('index', { msg: 'Valor de depósito inválido.', cofrinhos: cofrinhos });
+    }
+
+    try {
+        const usuarioAtual = await Usuario.findOne({ where: { id: usuario.id } });
+
+        if (!usuarioAtual) {
+            const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
+            return res.render('index', { msg: 'Usuário não encontrado.', cofrinhos: cofrinhos });
+        }
+
+        await usuarioAtual.update({ saldo: usuarioAtual.saldo + valorDeposito });
+
+        req.session.login.saldo = usuarioAtual.saldo;
+
+        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
+        res.render('index', { msg: 'Valor depositado com sucesso!', cofrinhos: cofrinhos });
+
+    } catch (err) {
+        console.error(err);
+        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
+        res.render('index', { msg: 'Ocorreu um erro ao depositar o valor.', cofrinhos: cofrinhos });
     }
 };

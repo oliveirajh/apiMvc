@@ -1,0 +1,28 @@
+<%- include('../partials/header') %>
+
+<body>
+    <h1 class="text-center text-2xl font-bold py-4 text-indigo-400">Exclusão de conta</h1>
+
+    <div class="container w-80 mx-auto bg-[#f8f8f8] p-4 py-6">
+        <p>Tem certeza que deseja excluir sua conta?</p>
+
+        <div class="flex justify-evenly">
+            <a href="/">
+                <div class="my-2 w-16 bg-rose-500 py-2 px-3 text-white rounded-xl hover:bg-rose-600">
+                    <p class="text-center">Não</p>
+                </div>
+            </a>
+
+            <form action="/user/deleteUser" method="post">
+                <button type="submit">
+                    <div class="my-2 w-16 bg-green-400 py-2 px-3 text-white rounded-xl hover:bg-green-500">
+                        <p class="text-center">Sim</p>
+                    </div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+</body>
+
+<%- include('../partials/footer') %>

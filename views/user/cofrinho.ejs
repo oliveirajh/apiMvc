@@ -1,0 +1,16 @@
+<%- include("../partials/header") %>
+<body>
+    <h1 class="text-center text-2xl font-bold py-4 text-indigo-400">Criar cofrinho</h1>
+
+    <div class="container w-80 mx-auto bg-[#f8f8f8] p-4 py-6">
+        <form action="/user/cofrinho" method="post">
+        <p>Nome do seu cofrinho:</p>
+        <input required class="my-2 w-full rounded-md px-2 py-1 border-[1px] border-indigo-500 bg-transparent outline-0" type="text" name="name" placeholder="Nome" id="name">
+        <p>Meta (opcional):</p>
+        <input class="my-2 w-full rounded-md px-2 py-1 border-[1px] border-indigo-500 bg-transparent outline-0" type="number" name="goal" placeholder="R$" id="goal" step="0.01">
+        <button class="my-2 bg-indigo-400 py-2 px-3 text-white rounded-xl hover:bg-indigo-500" type="submit">Criar</button>
+        <a class="my-2 bg-indigo-400 py-[10px] px-3 text-white rounded-xl hover:bg-indigo-500" href="/">Voltar</a>
+        </form>
+    </div>
+</body>
+<%- include("../partials/footer") %>
