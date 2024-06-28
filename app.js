@@ -4,6 +4,7 @@ const app = express();
 const session = require('express-session');
 const connection = require('./database/database');
 const setUser = require("./middlewares/setUser");
+require('dotenv').config();
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -11,7 +12,7 @@ app.set('view engine', 'ejs');
 
 // Sessions
 app.use(session({
-    secret: 'projeto1',
+    secret: process.SESSION_SECRET,
     cookie: {
         maxAge: 1200000,
     },
