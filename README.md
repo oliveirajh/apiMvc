@@ -143,52 +143,72 @@ Agora você deve ser capaz de ver a aplicação rodando localmente, com a conex�
 
 ## Tela principal
 
+A tela principal é onde o usuário pode interagir com todo o sistema e ver informações importantes sobre sua conta.
+
 <img src="/public/images/mainscreen.png">
 
 ## Tela de Login
+
+A tela de login é onde o usuário pode realizar a entrada com suas credenciais no sistema e interagir com o sistema através de sua conta.
 
 <img src="/public/images/login.png">
 
 ## Tela de cadastro
 
+A tela de cadastro é onde o usuário pode cadastrar uma conta para utilizar o sistema.
+
 <img src="/public/images/cadastro.png">
 
 ## Confirmação de exclusão
+
+A tela de confirmação de exclusão é apenas uma tela que o usuário será redirecionado caso ele queira excluir a conta.
 
 <img src="/public/images/excluir.png">
 
 ## Tela de extratos
 
+A tela de extratos é onde o usuário pode visualizar todos seus extratos bancários.
+
 <img src="/public/images/extrato.png">
 
 ## Tela de transferência
+
+A tela de transferência é onde o usuário pode realizar transações bancárias através de uma chave UUID.
 
 <img src="/public/images/transferir.png">
 
 ## Tela de edição de informações do usuário
 
+A tela de edição de informações do usuário é onde o usuário pode editar informações sobre sua conta.
+
 <img src="/public/images/Editar.png">
 
 ## Tela de criação de cofrinho
+
+A tela de criação de cofrinho é onde o usuário pode preencher informações sobre um novo cofrinho para a criação do mesmo.
 
 <img src="/public/images/cofrinho.png">
 
 ## Deposito cofrinho
 
+A tela de deposito de cofrinho é onde o usuário pode depositar seu saldo no cofrinho selecionado.
+
 <img src="/public/images/depositoCofrinho.png">
 
 ## Sacar do cofrinho
+
+A tela de sacar do cofrinho é onde o usuário poderá sacar saldos do cofrinho selecionado.
 
 <img src="/public/images/sacarCofrinho.png">
 
 ## Editar cofrinho
 
+A tela de editar cofrinho é onde o usuário pode editar informações do cofrinho selecionado.
+
 <img src="/public/images/editarCofrinho.png">
 
 ## Tela de depósito bancário
 
+A tela de depósito bancário é onde o usuário poderá realizar depósitos de saldo para sua conta.
+
 <img src="/public/images/deposito.png">
-
-## Tela de transferência bancária
-
-<img src="/public/images/transferir.png">
