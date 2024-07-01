@@ -1,7 +1,6 @@
 # projetoMVC
 Projeto web simples utilizando a estrutura MVC, feito para a disciplina Programação Multiplataforma.
 
-## Sumário
 ## Tecnologias
 <img src="https://skillicons.dev/icons?i=javascript,html,css,mysql&perline=8" />
 <h2>Frameworks/bibliotecas</h2> 
