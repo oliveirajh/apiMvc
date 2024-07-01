@@ -1,7 +1,6 @@
 # projetoMVC
 Projeto web simples utilizando a estrutura MVC, feito para a disciplina Programação Multiplataforma.
 
-Autores: Avalone da Silva Cabrera, Christian Martins Teixeira, Gustavo Gutierrez, João Henrique de Oliveira, João Victor Ferrari de Melo
 ## Sumário
 ## Tecnologias
 <img src="https://skillicons.dev/icons?i=javascript,html,css,mysql&perline=8" />
