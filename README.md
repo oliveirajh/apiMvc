@@ -115,7 +115,7 @@ DB_PASSWORD=senha
 SESSION_SECRET=projetoMVC
 ```
 
-**Nota:** Se você criou um novo usuário, substitua `novo_usuario` e `senyha` pelos dados do novo usuário.
+**Nota:** Se você criou um novo usuário, substitua `novo_usuario` e `senha` pelos dados do novo usuário.
 
 *SESSION_SECRET é o segredo usado para assinar o cookie de ID de sessão. O segredo pode ser qualquer tipo de valor suportado pelo Node.js crypto.createHmac (como uma string ou um Buffer). Pode ser um único segredo ou uma série de vários segredos. Se for fornecido um array de segredos, apenas o primeiro elemento será utilizado para assinar o cookie de ID de sessão, enquanto todos os elementos serão considerados na verificação da assinatura nas solicitações. O segredo em si não deve ser facilmente analisado por um humano e seria melhor ser um conjunto aleatório de caracteres*
 
