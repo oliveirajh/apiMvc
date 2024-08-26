@@ -4,53 +4,55 @@ const Cofrinho = require('../models/cofrinho');
 const Extrato = require("../models/extrato");
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
-const checkLogin = require('../middlewares/checkLogin');
+const checkLogin = require('../middlewares/checkAuth');
 const connection = require('../database/database');
 
 exports.cofrinhoCreate = async (req, res, next) => {
-    const usuario = req.session.login;
+    const usuario = req.userData;
     const nome = req.body.name;
     const meta = req.body.goal;
 
     try {
         if (meta === "") {
-            await Cofrinho.create({
-                usuarioId: usuario.id,
+            const cofrinho = await Cofrinho.create({
+                usuarioId: usuario.userId,
                 nome: nome,
             });
+            return res.status(201).json({ msg: 'Cofrinho criado com sucesso!', cofrinho: cofrinho });
         } else {
-            await Cofrinho.create({
-                usuarioId: usuario.id,
+            const cofrinho = await Cofrinho.create({
+                usuarioId: usuario.userId,
                 nome: nome,
                 meta: parseFloat(meta),
             });
+            return res.status(201).json({ msg: 'Cofrinho criado com sucesso!', cofrinho: cofrinho });
         }
-
-        res.redirect("/");
     } catch (err) {
         console.error(err);
-        res.render('index', { msg: 'Ocorreu um erro ao criar o cofrinho.' });
+        res.status(500).json({ msg: 'Ocorreu um erro ao criar o cofrinho.' });
     }
 };
 
 
 exports.cofrinhoDelete = async (req, res, next) => {
     const cofrinhoId = req.params.id;
+    const usuarioAtual = req.userData;
 
     try {
         const cofrinho = await Cofrinho.findOne({ where: { id: cofrinhoId } });
 
         if (!cofrinho) {
-            const usuario = req.session.login;
-            const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
-            return res.render('index', { msg: 'Cofrinho não encontrado.', cofrinhos: cofrinhos });
+            return res.status(404).json({ msg: 'Cofrinho não encontrado.' });
         }
 
-        const usuario = await Usuario.findOne({ where: { id: cofrinho.usuarioId } });
+        if(cofrinho.usuarioId !== usuarioAtual.userId){
+            return res.status(401).json({ msg: 'Não autorizado.' });
+        }
+
+        const usuario = await Usuario.findOne({ where: { id: usuarioAtual.userId } });
 
         if (!usuario) {
-            const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
-            return res.render('index', { msg: 'Usuário não encontrado.', cofrinhos: cofrinhos });
+            return res.status(404).json({ msg: 'Usuário não encontrado.' });
         }
 
         await usuario.update({ saldo: usuario.saldo + cofrinho.saldo });
@@ -70,55 +72,39 @@ exports.cofrinhoDelete = async (req, res, next) => {
 
         await cofrinho.destroy();
 
-        req.session.login.saldo = usuario.saldo;
-
-        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
-
-        res.render('index', { msg: 'Cofrinho excluído com sucesso!', cofrinhos: cofrinhos });
+        res.status(200).json({ msg: 'Cofrinho excluído com sucesso!' });
     } catch (err) {
-        console.error(err);
-        const usuario = req.session.login;
-        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
-        res.render('index', { msg: 'Ocorreu um erro ao excluir o cofrinho.', cofrinhos: cofrinhos });
+        res.status(500).json({ msg: 'Ocorreu um erro ao excluir o cofrinho.' });
     }
 };
 
 
-exports.cofrinhoAddRender = (req, res, next) => {
-    const cofrinhoId = req.params.id;
-    res.render("user/addCofrinho", {
-        msg: "",
-        cofrinhoId: cofrinhoId,
-        usuario: req.session.login
-    });
-}
-
 exports.cofrinhoAdd = async (req, res, next) => {
     const cofrinhoId = req.params.id;
-    const usuario = req.session.login;
+    const usuario = req.userData;
     const valor = parseFloat(req.body.valor);
 
-    if (!usuario) {
-        return res.render('index', { msg: 'Usuário não está logado.' });
-    }
-
     if (isNaN(valor) || valor <= 0) {
-        return res.render('index', { msg: 'Valor inválido.' });
+        return res.status(400).json({ msg: 'Valor de depósito inválido.' });
     }
 
     try {
-        const user = await Usuario.findOne({ where: { id: usuario.id } });
+        const user = await Usuario.findOne({ where: { id: usuario.userId } });
         if (!user) {
-            return res.render('index', { msg: 'Usuário não encontrado.' });
+            return res.status(404).json({ msg: 'Usuário não encontrado.' });
         }
 
         if (user.saldo < valor) {
-            return res.render('user/addCofrinho', { msg: 'Saldo insuficiente.', cofrinhoId: cofrinhoId });
+            return res.status(400).json({ msg: 'Saldo insuficiente para operação.' });
         }
 
         const cofrinho = await Cofrinho.findOne({ where: { id: cofrinhoId } });
         if (!cofrinho) {
-            return res.render('index', { msg: 'Cofrinho não encontrado.' });
+            return res.status(404).json({ msg: 'Cofrinho não encontrado.' });
+        }
+
+        if(cofrinho.usuarioId !== usuario.userId){
+            return res.status(401).json({ msg: 'Não autorizado.' });
         }
 
         await connection.transaction(async (t) => {
@@ -135,70 +121,48 @@ exports.cofrinhoAdd = async (req, res, next) => {
                 conta_destino: 'Cofrinho',
                 usuarioId: usuario.id
             }, { transaction: t });
-
-            req.session.login.saldo = user.saldo;
         });
 
-        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
+        const cofrinhos = await Cofrinho.findOne({ where: {id: cofrinhoId} });
 
-        res.render('index', {
-            msg: 'Depósito efetuado com sucesso!',
-            cofrinhos: cofrinhos
-        });
-
+        return res.status(200).json({ msg: 'Depósito efetuado com sucesso!', cofrinhos: cofrinhos });
     } catch (err) {
         console.error(err);
-        res.render('user/addCofrinho', { msg: 'Ocorreu um erro ao processar sua solicitação.', cofrinhoId: cofrinhoId });
+        return res.status(500).json({ msg: 'Ocorreu um erro ao processar sua solicitação.' });
     }
 };
 
-
-exports.cofrinhoRender = (req, res, next) => {
-    res.render("user/cofrinho", {
-        msg: ""
-    });
-}
-
-exports.cofrinhoWithdrawRender = async (req, res, next) => {
-    const cofrinhoId = req.params.id;
-
-    const cofrinho = await Cofrinho.findOne({where:{id: cofrinhoId}}).then(cofrinho => {
-        res.render("user/cofrinhoWithdraw", {msg:"", cofrinho: cofrinho, cofrinhoId: cofrinhoId})
-    });
-}
-
-
 exports.cofrinhoWithdraw = async (req, res, next) => {
+    const usuario = req.userData
     const cofrinhoId = req.params.id;
-    const usuario = req.session.login;
     const valorSaque = parseFloat(req.body.valor);
 
     if (!usuario) {
-        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
-        return res.render('index', { msg: 'Usuário não está logado.', cofrinhos: cofrinhos });
+        return res.status(401).json({ msg: 'Usuário não encontrado.' });
     }
 
     if (isNaN(valorSaque) || valorSaque <= 0) {
-        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
-        return res.render('user/cofrinho', { msg: 'Valor de saque inválido.', cofrinhos: cofrinhos });
+        return res.status(400).json({ msg: 'Valor de saque inválido.' });
     }
 
     try {
         const cofrinho = await Cofrinho.findOne({ where: { id: cofrinhoId } });
         if (!cofrinho) {
-            const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
-            return res.render('index', { msg: 'Cofrinho não encontrado.', cofrinhos: cofrinhos });
+            return res.status(404).json({ msg: 'Cofrinho não encontrado.' });
+        }
+
+        if(cofrinho.usuarioId !== usuario.userId){
+            return res.status(401).json({msg: "Não Autorizado."});
         }
 
         if (cofrinho.saldo < valorSaque) {
-            const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
-            return res.render(`user/cofrinhoWithdraw`, { msg: 'Saldo insuficiente no cofrinho.', cofrinho: cofrinho, cofrinhoId: cofrinhoId, cofrinhos: cofrinhos });
+            return res.status(403).json({msg: "Saldo Insuficiente para sacar"})
         }
 
         await connection.transaction(async (t) => {
             await cofrinho.update({ saldo: cofrinho.saldo - valorSaque }, { transaction: t });
 
-            const user = await Usuario.findOne({ where: { id: usuario.id } });
+            const user = await Usuario.findOne({ where: { id: usuario.userId } });
             if (!user) {
                 throw new Error('Usuário não encontrado.');
             }
@@ -212,46 +176,38 @@ exports.cofrinhoWithdraw = async (req, res, next) => {
                 saldo_apos_transacao: user.saldo,
                 descricao: `Saque do cofrinho: ${cofrinho.nome}`,
                 categoria: 'Cofrinho',
-                conta_destino: usuario.email,
-                usuarioId: usuario.id
+                conta_destino: user.email,
+                usuarioId: user.id
             }, { transaction: t });
-
-            req.session.login.saldo = user.saldo;
         });
 
-        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
+        const cofrinhos = await Cofrinho.findAll({ where: { id: cofrinhoId } });
 
-        res.render("index", {
-            msg: 'Saque efetuado com sucesso!',
-            cofrinhos: cofrinhos
-        });
+        return res.status(200).json({msg: "Saque Efetuado com sucesso", cofrinho: cofrinhos})
 
     } catch (err) {
         console.error(err);
-        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
-        res.render('index', { msg: 'Ocorreu um erro ao processar sua solicitação.', cofrinhos: cofrinhos });
+        return res.status(500).json({msg: "Ocorreu um erro ao processar sua solicitação"})
     }
 };
 
-
-exports.cofrinhoEditRender = async (req, res, next) => {
-    const cofrinhoId = req.params.id;
-
-    const cofrinho = await Cofrinho.findOne({where:{id: cofrinhoId}}).then(cofrinho => {
-        res.render("user/cofrinhoEdit", {msg:"", cofrinho: cofrinho, cofrinhoId: cofrinhoId})
-    });
-}
-
 exports.cofrinhoEdit = async (req, res, next) => {
     const cofrinhoId = req.params.id;
+    const usuario = req.userData
     const name = req.body.name;
     const meta = req.body.goal;
 
     try {
         const cofrinho = await Cofrinho.findOne({ where: { id: cofrinhoId } });
 
+        if(cofrinho.usuarioId != usuario.userId){
+            return res.status(401).json({
+                msg: "Não Autorizado!"
+            })
+        }
+
         if (!cofrinho) {
-            return res.render('index', { msg: 'Cofrinho não encontrado.' });
+            return res.status(404).json({msg: "Cofrinho não Encontrado"})
         }
 
         if (name !== "") {
@@ -264,13 +220,20 @@ exports.cofrinhoEdit = async (req, res, next) => {
             await cofrinho.update({ meta: null });
         }
 
-        const usuario = req.session.login;
-        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
+        const cofrinhoUpdate = await Cofrinho.findOne({ where: { id: cofrinhoId } });
 
-        res.render('index', { msg: 'Cofrinho atualizado com sucesso!', cofrinhos: cofrinhos });
+        return res.status(200).json({ msg: 'Cofrinho atualizado com sucesso!', cofrinho: cofrinhoUpdate });
     } catch (err) {
         console.error(err);
-        res.render('index', { msg: 'Ocorreu um erro ao atualizar o cofrinho.' });
+        return res.status(500).json({ msg: 'Ocorreu um erro ao processar sua solicitação.' });
     }
 };
+
+exports.getOneCofrinho = async (req, res, next) => {
+    /* Busca Apenas um cofrinho */
+}
+
+exports.getAllCofrinhos = async (req, res, next) => {
+    /* Busca todos os cofrinhos do Usuário */
+}
 

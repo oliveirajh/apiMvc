@@ -1,16 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const cofrinhoController = require('../controllers/cofrinhoController');
+const checkAuth = require('../middlewares/checkAuth');
 
-router.get("/cofrinho", cofrinhoController.cofrinhoRender);
-router.post("/cofrinho", cofrinhoController.cofrinhoCreate);
-router.post("/cofrinho/delete/:id", cofrinhoController.cofrinhoDelete);
-router.get("/cofrinho/add/:id", cofrinhoController.cofrinhoAddRender);
-router.post("/cofrinho/add/:id", cofrinhoController.cofrinhoAdd);
-router.get("/cofrinho/withdraw/:id", cofrinhoController.cofrinhoWithdrawRender);
-router.post("/cofrinho/withdraw/:id", cofrinhoController.cofrinhoWithdraw);
-router.get("/cofrinho/edit/:id", cofrinhoController.cofrinhoEditRender);
-router.post("/cofrinho/edit/:id", cofrinhoController.cofrinhoEdit);
+router.post("/cofrinho",checkAuth, cofrinhoController.cofrinhoCreate);
+router.delete("/cofrinho/:id",checkAuth, cofrinhoController.cofrinhoDelete);
+router.post("/cofrinho/add/:id",checkAuth, cofrinhoController.cofrinhoAdd);
+router.post("/cofrinho/withdraw/:id",checkAuth, cofrinhoController.cofrinhoWithdraw);
+router.put("/cofrinho/:id",checkAuth, cofrinhoController.cofrinhoEdit);
+/*
+router.get("/cofrinho",checkAuth, cofrinhoController.cofrinhoGetAll);
+router.get("/cofrinho/:id",checkAuth, cofrinhoController.cofrinhoGetById);
+
+
+
+*/
 
 
 module.exports = router;

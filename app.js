@@ -1,30 +1,13 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-const session = require('express-session');
 const connection = require('./database/database');
-const setUser = require("./middlewares/setUser");
 require('dotenv').config();
-
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
-
-
-// Sessions
-app.use(session({
-    secret: process.SESSION_SECRET,
-    cookie: {
-        maxAge: 1200000,
-    },
-    resave: false,
-    saveUninitialized: false
-}));
 
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(setUser);
 
 // Banco de Dados
 connection.authenticate().then(() => {
@@ -35,8 +18,7 @@ connection.authenticate().then(() => {
 });
 
 // Middlewares
-const cofrinhos = require("./middlewares/cofrinhos");
-const checkLogin = require("./middlewares/checkLogin");
+const checkLogin = require("./middlewares/checkAuth");
 
 // Rotas
 const userRoutes = require("./routes/userRoutes");
@@ -45,8 +27,19 @@ const cofrinhoRoutes = require("./routes/cofrinhoRoutes");
 
 app.use('/user', userRoutes, extratoRoutes, cofrinhoRoutes);
 
-app.get('/', checkLogin, cofrinhos, (req, res, next) => {
-    res.render('index', {msg: ""});
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers',
+      'Origin, X-Requested-Width, Content-Type, Accept, Authorization'
+    );
+    res.setHeader('Access-Control-Allow-Methods',
+      'GET, POST, PATCH, PUT, DELETE, OPTIONS'
+    );
+    next();
+})
+
+app.get('/', (req, res, next) => {
+    res.json({ message: 'Hello World!' });
 });
 
 module.exports = app;

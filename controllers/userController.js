@@ -3,55 +3,70 @@ const Usuario = require('../models/user');
 const Extrato = require('../models/extrato');
 const Cofrinho = require('../models/cofrinho');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const checkLogin = require('../middlewares/checkLogin');
 const connection = require('../database/database');
-
-exports.renderLogin = (req, res, next) => {
-    res.render('user/login', {msg: ''});
-}
-
-exports.logout = (req, res, next) => {
-    req.session.destroy((err) => {
-        if (err) {
-            console.error('Erro ao encerrar a sessão:', err);
-            res.redirect('/');
-        } else {
-            res.redirect('/user/login');
-        }
-    });
-};
+const utils = require('../utils/utils');
 
 exports.login = (req, res, next) => {
+    const JWT_KEY = utils.JWT_KEY;
     const email = req.body.email;
-    const senha = req.body.password;
+    const senha = req.body.senha;
+    let erro = false;
+    let usuarioEncontrado;
 
-    Usuario.findOne({
-        where: {
-            email: email
-        }
-    }).then(usuario => {
-        if(usuario != undefined){
-            if(bcrypt.compareSync(senha, usuario.senha)){
-                req.session.login = {
-                    usuario: usuario.email,
-                    username: usuario.username,
-                    saldo: usuario.saldo,
-                    chave: usuario.chave
-                };
-                res.redirect('/');
-            } else {
-                res.render('user/login', {msg: 'Usuário ou senha inválidos.'});
+    if(email === undefined || senha === undefined)
+    {
+        res.status(400).json({
+            mensagem: 'Credenciais inválidas!'
+        });
+    }
+    else {
+        Usuario.findOne({
+            where: {
+                email: email
             }
-        } else {
-            res.render('user/login', {msg: 'Usuário não encontrado.'});
-        }
-    });
+        }).then(usuario => {
+            if(!usuario)
+            {
+                erro = true;
+                return res.status(401).json({
+                    mensagem: 'Credenciais inválidas!'
+                });
+            }
+            else
+            {
+                usuarioEncontrado = usuario;
+                return bcrypt.compare(senha, usuario.senha);
+            }
+        }).then(resultado => {
+            if(!erro)
+            {
+                if(!resultado)
+                {
+                    return res.status(401).json({
+                        mensagem: 'Credenciais inválidas!'
+                    });
+                }
+                const token = jwt.sign(
+                    {email: usuarioEncontrado.email, userId: usuarioEncontrado.id},
+                    JWT_KEY,
+                    {expiresIn: '1h'}
+                );
+                res.status(200).json({
+                    token: token,
+                    expiresIn: '3600'
+                });
+            }
+        }).catch(err => {
+            console.log(err);
+            return res.status(401).json({
+                mensagem: 'Credenciais inválidas!'
+            });
+        });
+    }
 }
 
-exports.renderRegister = (req, res, next) => {
-    res.render('user/register', {msg: ''});
-}
 
 exports.register = (req, res, next) => {
     const email = req.body.email;
@@ -75,80 +90,141 @@ exports.register = (req, res, next) => {
                 senha: senhaCriptografada,
                 saldo: 0.0,
                 chave: uuidv4()
-            }).then(() => {
-                    res.render("user/login", {msg: "Usuário cadastrado com sucesso!"});
+            }).then(usuarioCriado => {
+                    res.status(201).json({ mensagem: 'Usuário criado com sucesso!', usuario: { id: usuarioCriado.id, email: usuarioCriado.email, saldo: usuarioCriado.saldo, chave: usuarioCriado.chave } });
                 }).catch(error => {
-                    res.render("user/login", {msg: `Erro ao criar carteira para usuário: ${error}`});
+                    res.status(500).json({ mensagem: `Erro ao Criar Carteira para ussuário ${error}` });
                 }).catch(error => {
                     if(error.name == "SequelizeUniqueConstraintError") {
-                        res.render("user/login", {msg: "Usuário não cadastrado: Email ou nome de usuário já está em uso."});
+                        res.status(409).json({ mensagem: "Usuário já cadastrado!" });
                     } else {
-                        res.render("user/login", {msg: `Erro ao cadastrar usuário: ${error}`});
+                        res.status(500).json({ mensagem: `Erro ao criar usuário ${error}` });
                     }
                 });
         } else {
-            res.render("user/login", {msg: "Usuário não cadastrado: Email ou nome de usuário já está em uso."});
+            res.status(409).json({ mensagem: "Usuário já cadastrado!" });
         }
     });
-}
-
-exports.deleteUserRender = (req, res, next) => {
-    res.render("user/delete", {msg: ""});
 }
 
 exports.deleteUser = (req, res, next) => {
-    const usuario = req.session.login;
+    const usuario = req.params.id
+    const usuarioAtual = req.userData
 
+    console.log(usuarioAtual)
+    console.log(usuario)
 
-    Usuario.destroy({
-        where: {
-            email: usuario.usuario
-        }
-    }).then(() => {
-        Extrato.destroy({
-            where:{
-                usuarioId: null
+    if(usuario != usuarioAtual.userId){
+        res.status(401).json({"msg": "Você não tem permissão para deletar este usuário!"})
+    }else{
+        Usuario.destroy({
+            where: {
+                id: req.params.id
             }
         }).then(() => {
-            req.session.destroy();
-        res.render('user/login', {msg: "Conta deletada com sucesso!"});
+            Extrato.destroy({
+                where:{
+                    usuarioId: null
+                }
+            }).then(() => {
+                res.status(200).json({"msg": "Usuário deletado com sucesso!"});
+            });
+        }).catch (err =>{
+            console.error(`Erro ao deletar usuário: ${err}`)
         });
-    }).catch (err =>{
-        console.error(`Erro ao deletar usuário: ${err}`)
-    });
-    
+    }
 }
 
-exports.transferRender = (req, res, next) => {
-    res.render('user/transfer', {msg: ''});
+exports.edit = async (req, res, next) => {
+    const username = req.body.username;
+    const email = req.body.email;
+    const oldPassword = req.body.password0;
+    const password = req.body.password1;
+    const passwordCheck = req.body.password2;
+    const usuarioAtual = req.userData
+    const usuario = req.params.id
+
+    if(req.params.id != usuarioAtual.userId){
+        res.status(401).json({"msg": "Você não tem permissão para editar este usuário!"})
+    }
+    try {
+        if (username) {
+            const usuarioEncontrado = await Usuario.findOne({ where: {username: username} });
+            if (usuarioEncontrado) {
+                res.status(409).json({ mensagem: "Nome de usuário já cadastrado, por favor, tente outro." });
+                return ;
+            } else {
+                const usuarioAtual = await Usuario.findOne({ where: { id: usuario } });
+                if (usuarioAtual) {
+                    await usuarioAtual.update({ username: username });
+                }
+            }
+        }
+
+        if (email) {
+            const usuarioEncontrado = await Usuario.findOne({ where: {email: email} });
+            if (usuarioEncontrado) {
+                res.status(409).json({ mensagem: "Email já cadastrado, por favor, tente outro." });
+                return ;
+            } else {
+                const usuarioAtual = await Usuario.findOne({ where: { id: usuario } });
+                if (usuarioAtual) {
+                    await usuarioAtual.update({ email: email });
+                }
+            }
+        }
+
+        if (password) {
+            if (password == passwordCheck) {
+                const usuarioAtual = await Usuario.findOne({ where: { id: usuario } });
+                if (usuarioAtual) {
+                    const senhaCorreta = bcrypt.compareSync(oldPassword, usuarioAtual.senha);
+                    if (senhaCorreta) {
+                        const salt = bcrypt.genSaltSync();
+                        const senhaCriptografada = bcrypt.hashSync(password, salt);
+                        await usuarioAtual.update({ senha: senhaCriptografada });
+                    } else {
+                        res.status(401).json({ mensagem: "Senha antiga incorreta." });
+                        return ;
+                    }
+                }
+            } else {
+                res.status(400).json({ mensagem: "Senhas não conferem." });
+                return ;
+            }
+        }
+
+        res.status(200).json({ mensagem: "Usuário atualizado com sucesso." });
+    } catch (err) {
+        next(err);
+    }
 }
 
 exports.transfer = async (req, res, next) => {
     const t = await connection.transaction();
     try {
-        const usuario = req.session.login;
+        const usuario = await Usuario.findOne({ where: { id: req.userData.userId }, transaction: t });
         const { email, saldo: saldoRemetente } = usuario;
-        const { chave, valor, descricao } = req.body;
+        const chave = req.params.chave;
+        const { valor, descricao } = req.body;
         const valorTransferencia = parseFloat(valor);
         const novoSaldo = saldoRemetente - valorTransferencia;
 
         if (chave === usuario.chave) {
-            return res.render("user/transfer", { msg: "Você não pode enviar saldo para si mesmo!" });
+            return res.status(400).json({ mensagem: "Você não pode transferir para você mesmo." });
         }
 
-        const remetente = await Usuario.findOne({ 
-            where: { email: email },
-            transaction: t
-        });
+        const remetente = await Usuario.findOne({ where: { id: req.userData.userId }, transaction: t });
+    
 
         if (!remetente) {
             await t.rollback();
-            return res.render('user/transfer', { msg: "Erro: Não foi possível encontrar o usuário remetente." });
+            return res.status(404).json({ mensagem: "Remetente não encontrado." });
         }
 
         if (novoSaldo < 0) {
             await t.rollback();
-            return res.render('user/transfer', { msg: "Saldo insuficiente." });
+            return res.status(400).json({ mensagem: "Saldo insuficiente para realizar transferência." });
         }
 
         const destinatario = await Usuario.findOne({ 
@@ -156,9 +232,11 @@ exports.transfer = async (req, res, next) => {
             transaction: t
         });
 
+
         if (!destinatario) {
             await t.rollback();
-            return res.render('user/transfer', { msg: "Destinatário não encontrado." });
+            return res.status(404).json({ mensagem: "Destinatário não encontrado." });
+            
         }
 
         await remetente.update({ saldo: novoSaldo }, { transaction: t });
@@ -186,130 +264,62 @@ exports.transfer = async (req, res, next) => {
         }, { transaction: t });
 
         await t.commit();
-
-        req.session.login.saldo = novoSaldo;
-        return res.redirect('/');
+        res.status(200).json({ mensagem: "Transferência realizada com sucesso." });
     } catch (err) {
         await t.rollback();
-        return res.render('user/transfer', { msg: `Erro: ${err.message}` });
+        res.status(500).json({ mensagem: "Erro ao realizar transferência." });
     }
 };
-
-exports.edit = async (req, res, next) => {
-    const username = req.body.username;
-    const email = req.body.email;
-    const oldPassword = req.body.password0;
-    const password = req.body.password1;
-    const passwordCheck = req.body.password2;
-
-    try {
-        if (username) {
-            const usuarioEncontrado = await Usuario.findOne({ where: { username: username } });
-            if (usuarioEncontrado) {
-                return res.render('user/edit', { msg: "Nome de usuário já existe, por favor, tente outro." });
-            } else {
-                const usuario = req.session.login;
-                const usuarioAtual = await Usuario.findOne({ where: { id: usuario.id } });
-                if (usuarioAtual) {
-                    await usuarioAtual.update({ username: username });
-                    req.session.login.username = username;
-                }
-            }
-        }
-
-        if (email) {
-            const usuarioEncontrado = await Usuario.findOne({ where: { email: email } });
-            if (usuarioEncontrado) {
-                return res.render('user/edit', { msg: "Email já cadastrado, por favor, tente outro." });
-            } else {
-                const usuario = req.session.login;
-                const usuarioAtual = await Usuario.findOne({ where: { id: usuario.id } });
-                if (usuarioAtual) {
-                    await usuarioAtual.update({ email: email });
-                    req.session.login.email = email;
-                }
-            }
-        }
-
-        if (password) {
-            if (password == passwordCheck) {
-                const usuario = req.session.login;
-                const usuarioAtual = await Usuario.findOne({ where: { id: usuario.id } });
-                if (usuarioAtual) {
-                    const senhaCorreta = bcrypt.compareSync(oldPassword, usuarioAtual.senha);
-                    if (senhaCorreta) {
-                        const salt = bcrypt.genSaltSync();
-                        const senhaCriptografada = bcrypt.hashSync(password, salt);
-                        await usuarioAtual.update({ senha: senhaCriptografada });
-                        req.session.login.senha = senhaCriptografada;
-                    } else {
-                        return res.render('user/edit', { msg: "Senha antiga incorreta." });
-                    }
-                }
-            } else {
-                return res.render('user/edit', { msg: "Senhas não coincidem." });
-            }
-        }
-
-        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: req.session.login.id } });
-        return res.render("index", { msg: "Dados salvos com sucesso!", cofrinhos: cofrinhos });
-    } catch (err) {
-        next(err);
-    }
-};
-
-exports.editRender = (req, res, next) => {
-    res.render('user/edit', {
-        usuario: req.session.login,
-        msg: ""
-    });
-}
-
-
-exports.depositRender = async(req, res, next) => {
-    res.render("user/deposit", {msg: ""});
-}
 
 exports.deposit = async (req, res, next) => {
-    const usuario = req.session.login;
+    const usuario = req.params.id;
+    const usuarioAuth = req.userData;
     const valorDeposito = parseFloat(req.body.valor);
 
     if (isNaN(valorDeposito) || valorDeposito <= 0) {
-        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
-        return res.render('index', { msg: 'Valor de depósito inválido.', cofrinhos: cofrinhos });
+        return res.status(400).json({ msg: 'Valor de depósito inválido.'});
+    }
+
+    if(usuario != usuarioAuth.userId){
+        res.status(401).json({"msg": "Você não tem permissão para depositar neste usuário!"})
     }
 
     try {
-        const usuarioAtual = await Usuario.findOne({ where: { id: usuario.id } });
+        const usuarioAtual = await Usuario.findOne({ where: { id: usuarioAuth.userId } });
 
         if (!usuarioAtual) {
-            const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
-            return res.render('index', { msg: 'Usuário não encontrado.', cofrinhos: cofrinhos });
+            return res.status(404).json({ msg: 'Usuário não encontrado.' });
         }
+        const saldoNovo = usuarioAtual.saldo + valorDeposito;
+        await usuarioAtual.update({ saldo: saldoNovo });
 
-        await usuarioAtual.update({ saldo: usuarioAtual.saldo + valorDeposito });
-
-        req.session.login.saldo = usuarioAtual.saldo;
-        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
+        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario } });
 
         await connection.transaction(async (t) => {
             await Extrato.create({
                 data_transacao: new Date(),
                 tipo_transacao: 'Recebimento',
                 valor: valorDeposito,
-                saldo_apos_transacao: usuario.saldo,
+                saldo_apos_transacao: saldoNovo,
                 descricao: 'Depósito bancário',
                 categoria: 'Cofrinho',
-                conta_destino: usuario.email,
-                usuarioId: usuario.id
+                conta_destino: usuarioAtual.email,
+                usuarioId: usuarioAtual.id
             }, { transaction: t });
         });
 
-        res.render('index', { msg: 'Valor depositado com sucesso!', cofrinhos: cofrinhos });
+        return res.status(200).json({ msg: 'Depósito realizado com sucesso.', saldo: saldoNovo, valorDeposito: valorDeposito });
 
     } catch (err) {
         console.error(err);
-        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.id } });
-        res.render('index', { msg: 'Ocorreu um erro ao depositar o valor.', cofrinhos: cofrinhos });
+        return res.status(500).json({ msg: 'Ocorreu um erro ao realizar o depósito.' });
     }
+};
+
+exports.GetOne = async (req, res, next) => {
+    /* Buscar e retornar dados de um usuário */
+};
+
+exports.GetAll = async (req, res, next) => {
+    /* Buscar e retornar todos os usuários */
 };
