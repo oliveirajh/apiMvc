@@ -316,10 +316,28 @@ exports.deposit = async (req, res, next) => {
     }
 };
 
-exports.GetOne = async (req, res, next) => {
-    /* Buscar e retornar dados de um usuário */
+exports.getUser = async (req, res, next) => {
+    const usuario = req.userData;
+    const usuarioId = req.params.id;
+    try {
+        const usuario = await Usuario.findOne({ where: { id: req.params.id } });
+        if (!usuario) {
+            return res.status(404).json({ msg: 'Usuário não encontrado.' });
+        }
+        return res.status(200).json({ usuario: usuario });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ msg: 'Ocorreu um erro ao buscar o usuário.' });
+    }
 };
 
-exports.GetAll = async (req, res, next) => {
-    /* Buscar e retornar todos os usuários */
+exports.getAllUsers = async (req, res, next) => {
+    const usuario = req.userData;
+    try {
+        const usuarios = await Usuario.findAll();
+        return res.status(200).json({ usuarios: usuarios });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ msg: 'Ocorreu um erro ao buscar os usuários.' });
+    }
 };

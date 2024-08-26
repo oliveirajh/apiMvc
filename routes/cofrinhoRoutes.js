@@ -8,13 +8,8 @@ router.delete("/cofrinho/:id",checkAuth, cofrinhoController.cofrinhoDelete);
 router.post("/cofrinho/add/:id",checkAuth, cofrinhoController.cofrinhoAdd);
 router.post("/cofrinho/withdraw/:id",checkAuth, cofrinhoController.cofrinhoWithdraw);
 router.put("/cofrinho/:id",checkAuth, cofrinhoController.cofrinhoEdit);
-/*
-router.get("/cofrinho",checkAuth, cofrinhoController.cofrinhoGetAll);
-router.get("/cofrinho/:id",checkAuth, cofrinhoController.cofrinhoGetById);
 
-
-
-*/
-
+router.get("/cofrinho", checkAuth, cofrinhoController.getAllCofrinhos);
+router.get("/cofrinho/:id", checkAuth, cofrinhoController.getOneCofrinho);
 
 module.exports = router;

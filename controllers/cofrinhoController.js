@@ -229,11 +229,39 @@ exports.cofrinhoEdit = async (req, res, next) => {
     }
 };
 
-exports.getOneCofrinho = async (req, res, next) => {
-    /* Busca Apenas um cofrinho */
-}
 
 exports.getAllCofrinhos = async (req, res, next) => {
-    /* Busca todos os cofrinhos do Usuário */
+    const usuario = req.userData;
+    try {
+        const cofrinhos = await Cofrinho.findAll({ where: { usuarioId: usuario.userId } });
+
+        if (!cofrinhos) {
+            return res.status(404).json({ msg: 'Nenhum cofrinho encontrado.' });
+        }
+
+        return res.status(200).json(cofrinhos);
+    } catch (err) {
+        return res.status(500).json({ msg: 'Ocorreu um erro ao buscar os cofrinhos.' });
+    }
 }
 
+exports.getOneCofrinho = async (req, res, next) => {
+    const cofrinhoId = req.params.id;
+    const usuario = req.userData;
+
+    try {
+        const cofrinho = await Cofrinho.findOne({ where: { id: cofrinhoId } });
+
+        if (!cofrinho) {
+            return res.status(404).json({ msg: 'Cofrinho não encontrado.' });
+        }
+
+        if(cofrinho.usuarioId !== usuario.userId){
+            return res.status(401).json({msg: "Não Autorizado!"});
+        }
+
+        return res.status(200).json(cofrinho);
+    } catch (err) {
+        return res.status(500).json({ msg: 'Ocorreu um erro ao buscar o cofrinho.' });
+    }
+}
